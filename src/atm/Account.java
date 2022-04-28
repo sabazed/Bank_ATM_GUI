@@ -1,24 +1,36 @@
 package atm;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 public class Account {
 
+    // Keep count of accounts for providing IDs
     protected static int count = 0;
+    protected static String nextId = "000000";
 
-    private final String firstName,lastName;
-    private final int idNumber;
+    // Account personal data
+    private final String firstName, lastName;
+    private final String idNumber;
     private int balance;
-    private char[] pin;
+    private String pin; // String instead of int since the return type from the password field is char[]
     private boolean frozen;
 
-    protected Account(String firstName, String lastName, char[] pin) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.pin = pin;
-        this.idNumber = count++;
-        this.balance = 0;
-        this.frozen = false;
+    // Constructor providing default values and ID
+    protected Account(ResultSet rs) throws SQLException {
+        this.idNumber = rs.getString(1);
+        this.pin = rs.getString(2);
+        this.firstName = rs.getString(3);
+        this.lastName = rs.getString(4);
+        this.balance = rs.getInt(5);
+        this.frozen = rs.getBoolean(6);
     }
 
+    protected String getId() {
+        return idNumber;
+    }
+
+    // Normal getters
     protected String getFirstName() {
         return firstName;
     }
@@ -27,7 +39,7 @@ public class Account {
         return lastName;
     }
 
-    protected char[] getPin() {
+    protected String getPin() {
         return pin;
     }
 
@@ -35,33 +47,45 @@ public class Account {
         return balance;
     }
 
+    // Checks if the account is frozen
     protected boolean isFrozen() {
         return frozen;
     }
 
+
+    // Methods for depositing and withdrawing money
     protected void deposit(int amount) {
         if (!frozen && amount > 0) {
             balance += amount;
         }
     }
 
-    protected void withdraw(int amount) {
+    protected boolean withdraw(int amount) {
         if (!frozen && amount <= balance && amount > 0) {
             balance -= amount;
+            return true;
         }
+        return false;
     }
 
-    protected void setPin(char[] pin) {
+    // Method for changing pin
+    protected void setPin(String pin) {
         this.pin = pin;
     }
 
+    // For (un)freezing account
     protected void toggleFreeze() {
         frozen = !frozen;
     }
 
-    protected boolean matchPin(char[] other) {
-        for (int i = 0; i < 4; i++) if (pin[i] != other[i]) return false;
-        return true;
+    // Update count value of program launch
+    protected static void updateCount(int num) {
+        count = num;
+        nextId = String.format("%06d", count);
+    }
+
+    protected static void update() {
+        nextId = String.format("%06d", ++count);
     }
 
 }

@@ -3,6 +3,10 @@ package atm;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class ATM_Login extends JFrame {
 
@@ -29,11 +33,13 @@ public class ATM_Login extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int temp = Integer.parseInt(login.getText());
-                char[] p = pinCode.getPassword();
-                if (ATM_Main.database.size() > temp && ATM_Register.validPin(p) && ATM_Main.database.get(temp).matchPin(p)) {
+
+                String l = login.getText();
+                String p = String.valueOf(pinCode.getPassword());
+                Account current = checkCredentials(l, p);
+                if (current != null) {
                     scene.dispose();
-                    ATM_Dashboard.open(temp);
+                    ATM_Dashboard.open(current);
                 }
                 else wrongCred.setText("Wrong Credentials! Please try again.");
             }
@@ -49,6 +55,24 @@ public class ATM_Login extends JFrame {
 
     }
 
+    private static Account checkCredentials(String login, String pin) {
+        try {
+            PreparedStatement check = ATM_Main.db.prepareStatement("SELECT * FROM accounts " +
+                                                                                    "WHERE id = ?" +
+                                                                                    "AND pin = ?");
+            check.setString(1, login);
+            check.setString(2, pin);
+            ResultSet rs = check.executeQuery();
+            if (!rs.next()) return null;
+            return new Account(rs);
+        }
+        catch (SQLException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    // Opening this window
     public static void open() {
         JFrame login = new ATM_Login("Java Bank ATM");
         login.setResizable(false);

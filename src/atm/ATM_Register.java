@@ -9,8 +9,8 @@ public class ATM_Register extends JFrame {
     private JPanel registerScreen;
 
     private JLabel idNum;
-    private JTextField lastName;
     private JTextField firstName;
+    private JTextField lastName;
     private JPasswordField pinCode;
 
     private JLabel wrongCred;
@@ -28,7 +28,7 @@ public class ATM_Register extends JFrame {
         this.setContentPane(registerScreen);
         this.pack();
 
-        idNum.setText(String.valueOf(Account.count + 1));
+        idNum.setText(Account.nextId);
 
         scene = this;
 
@@ -38,15 +38,16 @@ public class ATM_Register extends JFrame {
                 try {
                     String f = firstName.getText();
                     String l = lastName.getText();
-                    char[] p = pinCode.getPassword();
+                    String p = String.valueOf(pinCode.getPassword());
                     if (validPin(p) && validName(f, l)) {
-                        ATM_Main.database.add(new Account(f, l, p));
+                        ATM_Main.addAccount(f, l, p);
                         scene.dispose();
                         ATM_Welcome.open();
                     }
                     else throw new Exception("Wrong input! Please try again.");
                 }
                 catch (Exception ex) {
+                    ex.printStackTrace();
                     wrongCred.setText(ex.getMessage());
                 }
             }
@@ -62,17 +63,17 @@ public class ATM_Register extends JFrame {
 
     }
 
-    protected static boolean validPin(char[] pin) {
-        for (char c : pin) {
-            if (c < '0' || c > '9') return false;
-        }
-        return pin.length == 4;
+    // Check if the pin is valid input
+    protected static boolean validPin(String pin) {
+        return pin.length() == 4 && pin.chars().allMatch(Character::isDigit);
     }
 
+    // Check if the names are correctly provided
     private static boolean validName(String firstName, String lastName) {
         return firstName.chars().allMatch(Character::isLetter) && lastName.chars().allMatch(Character::isLetter);
     }
 
+    // Opening this window
     public static void open() {
         JFrame register = new ATM_Register("Java Bank ATM");
         register.setResizable(false);

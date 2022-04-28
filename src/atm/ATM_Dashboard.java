@@ -3,6 +3,9 @@ package atm;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class ATM_Dashboard extends JFrame {
 
@@ -17,10 +20,12 @@ public class ATM_Dashboard extends JFrame {
     private JButton depositButton;
     private JButton finishButton;
 
-    private final Account current;
+    private JTextField idTarget;
+    private JButton transferButton;
+
     private final JFrame scene;
 
-    public ATM_Dashboard(String title, int id) {
+    public ATM_Dashboard(String title, Account current) {
 
         super(title);
 
@@ -29,7 +34,6 @@ public class ATM_Dashboard extends JFrame {
         this.pack();
 
         scene = this;
-        current = ATM_Main.database.get(id);
         name.setText(current.getFirstName() + " " + current.getLastName());
         balance.setText(String.valueOf(current.getBalance()));
         frozen.setText(current.isFrozen() ? "Yes" : "No");
@@ -66,14 +70,54 @@ public class ATM_Dashboard extends JFrame {
         finishButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ATM_Main.updateAccount(current);
                 scene.dispose();
                 ATM_Welcome.open();
             }
         });
+
+        transferButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int val = Integer.parseInt(amount.getText());
+                String id = idTarget.getText();
+                try {
+                    ResultSet rs = checkCredentials(id);
+                    if (rs != null && rs.next() && current.withdraw(val)) {
+                        Account tmp = new Account(rs);
+                        tmp.deposit(val);
+                        ATM_Main.updateAccount(tmp);
+                    }
+                }
+                catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                amount.setText("0");
+                idTarget.setText("");
+                balance.setText(String.valueOf(current.getBalance()));
+
+            }
+        });
+
     }
 
-    public static void open(int id) {
-        JFrame atm = new ATM_Dashboard("Java Bank ATM", id);
+    private static ResultSet checkCredentials(String login) {
+        try {
+            PreparedStatement check = ATM_Main.db.prepareStatement("SELECT * FROM accounts " +
+                    "WHERE id = ?" +
+                    "AND frozen = FALSE");
+            check.setString(1, login);
+            return check.executeQuery();
+        }
+        catch (SQLException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    // Opening this window
+    public static void open(Account current) {
+        JFrame atm = new ATM_Dashboard("Java Bank ATM", current);
         atm.setResizable(false);
         atm.setVisible(true);
     }

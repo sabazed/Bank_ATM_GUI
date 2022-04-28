@@ -1,7 +1,6 @@
 package atm;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -14,7 +13,7 @@ public class ATM_Welcome extends JFrame {
 
     private final JFrame scene;
 
-    public ATM_Welcome(String title) throws HeadlessException {
+    public ATM_Welcome(String title) {
 
         super(title);
 
@@ -42,6 +41,7 @@ public class ATM_Welcome extends JFrame {
 
     }
 
+    // Opening this window
     public static void open() {
         JFrame welcome = new ATM_Welcome("Java Bank ATM");
         welcome.setResizable(false);
